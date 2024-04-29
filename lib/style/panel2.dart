@@ -956,24 +956,27 @@ class __FPanel2State extends State<_FPanel2> {
   // 播放器顶部菜单栏
   Widget buildTop(BuildContext context, double height) {
     if (player.value.fullScreen) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Row(
-              children: <Widget>[
-                buildBack(context),
-                buildTitle(),
-                const Spacer(),
-                buildTimeNow(),
-                buildPower(),
-                // buildNetConnect(),
-                buildSetting(context),
-              ],
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(27,0,27,0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Row(
+                children: <Widget>[
+                  buildBack(context),
+                  buildTitle(),
+                  const Spacer(),
+                  buildTimeNow(),
+                  buildPower(),
+                  // buildNetConnect(),
+                  buildSetting(context),
+                ],
+              ),
             ),
-          ),
-          buildSubTitle(),
-        ],
+            buildSubTitle(),
+          ],
+        ),
       );
     } else {
       return Row(
@@ -1020,16 +1023,19 @@ class __FPanel2State extends State<_FPanel2> {
               ),
             ),
             Expanded(
-              child: Row(
-                children: <Widget>[
-                  buildPlayButton(context, height),
-                  if (widget.isVideos &&
-                      widget.videoList!.length - 1 > widget.videoIndex)
-                    buildPlayNextButton(context, height),
-                  const Spacer(),
-                  buildOptTextButton(context, height),
-                  buildFullScreenButton(context, height),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(35,0,35,0),
+                child: Row(
+                  children: <Widget>[
+                    buildPlayButton(context, height),
+                    if (widget.isVideos &&
+                        widget.videoList!.length - 1 > widget.videoIndex)
+                      buildPlayNextButton(context, height),
+                    const Spacer(),
+                    buildOptTextButton(context, height),
+                    buildFullScreenButton(context, height),
+                  ],
+                ),
               ),
             ),
           ],
@@ -1112,7 +1118,7 @@ class __FPanel2State extends State<_FPanel2> {
 
     if (fullScreen) {
       rightWidget = Padding(
-        padding: const EdgeInsets.only(left: 10, right: 25, top: 8, bottom: 8),
+        padding: const EdgeInsets.only(left: 10, right: 45, top: 8, bottom: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
@@ -1153,7 +1159,7 @@ class __FPanel2State extends State<_FPanel2> {
         ),
       );
       leftWidget = Padding(
-        padding: const EdgeInsets.only(left: 25, right: 10, top: 8, bottom: 8),
+        padding: const EdgeInsets.only(left: 45, right: 10, top: 8, bottom: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
@@ -1399,7 +1405,7 @@ class __FPanel2State extends State<_FPanel2> {
         if (deltaDx == 0) {
           return; // 避免某些手机会返回0.0
         }
-        var dragValue = (deltaDx * 4000) + currentValue;
+        var dragValue = (deltaDx * 500) + currentValue;
         !lock ? onVideoTimeChangeUpdate.call(dragValue) : null;
       },
       onHorizontalDragEnd: (d) =>
@@ -1623,7 +1629,7 @@ class __FPanel2State extends State<_FPanel2> {
         angle: pi / 2,
         alignment: Alignment.center,
         child: Icon(
-          Icons.tune_rounded,
+          Icons.more_horiz,
           color: Theme.of(context).primaryColor,
         ),
       ),
@@ -1707,19 +1713,31 @@ class __FPanel2State extends State<_FPanel2> {
     }
   }
 
+  Widget backWidget() {
+    return Align(
+      alignment: Alignment.topLeft,
+      child: IconButton(
+        padding: const EdgeInsets.all(0),
+        icon: Icon(
+          Icons.arrow_back_ios_rounded,
+          color: Theme.of(context).primaryColor,
+        ),
+        onPressed: () {
+          player.value.fullScreen
+              ? player.exitFullScreen()
+              : Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Rect rect = panelRect();
-
     List<Widget> ws = [];
-
-    if (player.state == FState.asyncPreparing) {
+    if (player.state == FState.asyncPreparing || player.state == FState.error || (!player.value.audioRenderStart && !player.value.videoRenderStart)) {
       ws.add(buildStateless());
-    } else if (player.state == FState.error) {
-      ws.add(buildStateless());
-    } else if (!player.value.audioRenderStart &&
-        !player.value.videoRenderStart) {
-      ws.add(buildStateless());
+      ws.add(backWidget());
     } else {
       var volume = _volume;
       var brightness = _brightness;
@@ -1739,7 +1757,6 @@ class __FPanel2State extends State<_FPanel2> {
       }
       ws.add(buildGestureDetector(context));
     }
-
     return Positioned.fromRect(
       rect: rect,
       child: Stack(children: ws),
